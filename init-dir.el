@@ -152,6 +152,8 @@ FILE has the same meaning as in `load'."
   (let ((prev-time (time-convert nil 'list))
         (debug-ignored-errors '())
         (debug-on-error t)
+        (debug-on-signal t)
+        (signal-hook-function #'init-dir--signal-hook)
         (debugger #'init-dir--debugger)
         ;; Dynamic binding intended to be modified by clients.
         (init-dir--long-load-time-warning init-dir--long-load-time-warning))
@@ -175,11 +177,17 @@ FILE has the same meaning as in `load'."
   "Replacement debugger function while running `init-dir--load-single-file'.
 
 ARGS: See `debugger' for the meaning of ARGS."
+  (message "init-dir--debugger(%S)" args)
   (if (eq (car-safe args) 'error)
       ;; This entered the debugger due to an error -- the exact case
       ;; we want to handle specially.
       (throw 'init-dir--load-error (car-safe (cdr-safe args)))
     (apply #'debug args)))
+
+(defun init-dir--signal-hook (&rest args)
+  (message "init-dir--signal-hook(%S), inhibit-debugger=%S"
+           args inhibit-debugger)
+  nil)
 
 (provide 'init-dir)
 
